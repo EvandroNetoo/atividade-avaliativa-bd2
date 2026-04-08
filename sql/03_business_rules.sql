@@ -49,34 +49,21 @@ end;
 $$ language plpgsql;
 
 -- [3] Função PL/pgSQL: consultas a serem realizadas em uma data específica.
-CREATE OR REPLACE FUNCTION fn_consultas_a_realizar_por_data(p_data DATE)
-RETURNS TABLE (
-  id_consulta INT,
-  data_hora TIMESTAMP,
-  paciente VARCHAR(100),
-  medico VARCHAR(100),
-  status VARCHAR(20),
-  observacao TEXT
-)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  RETURN QUERY
-  SELECT
-    c.id_consulta,
-    c.data_hora,
-    p.nome,
-    m.nome,
-    c.status,
-    c.observacao
-  FROM consulta c
-  JOIN paciente p ON p.id_paciente = c.id_paciente
-  JOIN medico m ON m.id_medico = c.id_medico
-  WHERE c.status = 'AGENDADA'
-    AND c.data_hora::DATE = p_data
-  ORDER BY c.data_hora;
-END;
-$$;
+create or replace function consultas_por_data(p_data DATE)
+return table(
+    paciente VARCHAR,
+    medico VARCHAR,
+    data TIMESTAMP
+) as $$
+begin
+    return query
+    select p.nome, m.nome, c.data_hora
+    from consulta c
+    join paciente p on p.id_paciente = c.id_paciente
+    join medico m on m.id_medico = c.id_medico
+    where DATE(c.data_hora) = p_data;
+end;
+$$ LANGUAGE plpgsql;
 
 -- [4] Procedure para marcação de consulta com validações.
 CREATE OR REPLACE PROCEDURE sp_marcar_consulta(
