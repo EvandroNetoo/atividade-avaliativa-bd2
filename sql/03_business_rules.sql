@@ -1,4 +1,4 @@
-\connect clinica
+\connect clinica;
 
 -- [1] Só consultas REALIZADAS podem ser faturadas.
 create or replace function verificar_consulta_realizada()
@@ -14,8 +14,9 @@ returns trigger as $$
 
 		return new;
 	end	
-	$$language plpgsql	
+	$$ language plpgsql;
 
+drop trigger if exists trg_verificar_consulta_realizada on fatura_item;
 
 create trigger trg_verificar_consulta_realizada
 before insert on fatura_item
@@ -23,12 +24,12 @@ for each row
 execute function verificar_consulta_realizada();
 
 -- [2] Função SQL: consultas realizadas por convênio.
-create or replace function consultas_realizadas_por_convenio()
+create or replace function consultas_realizadas_por_convenio(p_id_convenio INT)
 returns table(
 	id_consulta INT,
 	paciente VARCHAR,
 	medico VARCHAR,
-	data_hota TIMESTAMP,
+  data_hora TIMESTAMP,
 	observacao VARCHAR
 ) as $$
 begin
@@ -50,7 +51,7 @@ $$ language plpgsql;
 
 -- [3] Função PL/pgSQL: consultas a serem realizadas em uma data específica.
 create or replace function consultas_por_data(p_data DATE)
-return table(
+returns table(
     paciente VARCHAR,
     medico VARCHAR,
     data TIMESTAMP
